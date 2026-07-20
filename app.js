@@ -8,6 +8,7 @@ const navigateButton = document.getElementById('navigateButton');
 const clearDestination = document.getElementById('clearDestination');
 const routeInfo = document.getElementById('routeInfo');
 const navigationInstructions = document.getElementById('navigationInstructions');
+const themeToggle = document.getElementById('toggleTheme');
 
 const instantSpeedEl = document.getElementById('instantSpeed');
 const averageSpeedEl = document.getElementById('averageSpeed');
@@ -467,10 +468,25 @@ function clearDestinationRoute() {
   updateStats();
 }
 
+function updateThemeButton() {
+  if (document.body.classList.contains('dark-theme')) {
+    themeToggle.textContent = '🌙';
+    themeToggle.setAttribute('aria-label', 'Tema scuro attivo');
+  } else {
+    themeToggle.textContent = '☀️';
+    themeToggle.setAttribute('aria-label', 'Tema chiaro attivo');
+  }
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('dark-theme');
+  updateThemeButton();
+}
+
 function initMap() {
   map = L.map('map', { zoomControl: true }).setView([45.0, 9.0], 13);
-  L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
-    maxZoom: 18,
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
   initLocation();
@@ -506,5 +522,7 @@ addressInput.addEventListener('keydown', (event) => {
 });
 navigateButton.addEventListener('click', startNavigation);
 clearDestination.addEventListener('click', clearDestinationRoute);
+themeToggle.addEventListener('click', toggleTheme);
 
 initMap();
+updateThemeButton();
