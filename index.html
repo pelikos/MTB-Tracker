@@ -10,89 +10,104 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div>
-        <h1>MTB Tracker</h1>
-        <p>Monocromo | GPS | Navigazione</p>
+      <div class="brand-group">
+        <div class="logo-mark">MTB</div>
+        <div>
+          <h1>MTB Tracker</h1>
+          <p>Tracciamento, navigazione e statistiche in tempo reale</p>
+        </div>
       </div>
       <button id="toggleTheme" aria-label="Cambia tema">⚪</button>
     </header>
 
-    <section class="map-card">
-      <div id="map"></div>
-    </section>
+    <main class="main-area">
+      <section class="map-section">
+        <div id="map"></div>
 
-    <section class="stats-card">
-      <div class="stat-row">
-        <div>
-          <span>Velocità istantanea</span>
-          <strong id="instantSpeed">0.0</strong> km/h
-        </div>
-        <div>
-          <span>Media</span>
-          <strong id="averageSpeed">0.0</strong> km/h
-        </div>
-      </div>
-      <div class="stat-row">
-        <div>
-          <span>Distanza</span>
-          <strong id="distance">0.00</strong> km
-        </div>
-        <div>
-          <span>Tempo</span>
-          <strong id="elapsed">00:00:00</strong>
-        </div>
-      </div>
-      <div class="stat-row altitude-row">
-        <div>
-          <span>Altitudine attuale</span>
-          <strong id="currentAltitude">—</strong>
-        </div>
-        <div>
-          <span>Prevista percorso</span>
-          <strong id="routeAltitude">—</strong>
-        </div>
-      </div>
-      <div class="stat-row gps-row">
-        <div>
-          <span>Qualità GPS</span>
+        <div class="map-badge">
+          <span>GPS</span>
           <strong id="gpsStatus">—</strong>
+          <small id="gpsAccuracy">Precisione —</small>
         </div>
-        <div>
-          <span>Precisione GPS</span>
-          <strong id="gpsAccuracy">—</strong>
+
+        <div class="stats-grid">
+          <article class="stat-card stat-large">
+            <span>Velocità</span>
+            <div class="value-group">
+              <strong id="instantSpeed">0.0</strong>
+              <small>km/h</small>
+            </div>
+            <p>Indicatori in tempo reale</p>
+          </article>
+          <article class="stat-card">
+            <span>Vel. media</span>
+            <strong id="averageSpeed">0.0</strong>
+            <p>Andamento medio</p>
+          </article>
+          <article class="stat-card">
+            <span>Distanza</span>
+            <strong id="distance">0.00</strong>
+            <p>Chilometri percorsi</p>
+          </article>
+          <article class="stat-card">
+            <span>Tempo</span>
+            <strong id="elapsed">00:00:00</strong>
+            <p>Durata attività</p>
+          </article>
+          <article class="stat-card">
+            <span>Altitudine</span>
+            <strong id="currentAltitude">—</strong>
+            <p>Quota attuale</p>
+          </article>
         </div>
-      </div>
-    </section>
 
-    <section class="controls-card">
-      <div class="buttons-row">
-        <button id="startButton" class="primary">Avvia</button>
-        <button id="stopButton" disabled>Ferma</button>
-      </div>
-      <div class="file-controls">
-        <label class="file-label">
-          Importa .gpx
-          <input type="file" id="importFile" accept=".gpx,.gtx" />
-        </label>
-        <button id="exportButton" disabled>Esporta .gpx</button>
-      </div>
-    </section>
+        <div class="fab-row">
+          <button id="startButton" class="primary">Avvia</button>
+          <button id="stopButton" disabled>Ferma</button>
+        </div>
+      </section>
 
-    <section class="navigation-card">
-      <h2>Destinazione</h2>
-      <div class="search-row">
-        <input id="addressInput" type="search" placeholder="Cerca indirizzo o paese" />
-        <button id="searchButton">Cerca</button>
-      </div>
-      <div class="nav-row">
-        <button id="navigateButton" disabled>Naviga</button>
-        <button id="clearDestination" disabled>Annulla</button>
-      </div>
-      <div class="route-summary">
-        <span id="routeInfo">Nessuna destinazione impostata.</span>
-      </div>
-      <div id="navigationInstructions" class="instructions"></div>
-    </section>
+      <section class="bottom-panel">
+        <div class="panel-row">
+          <div class="panel card-panel">
+            <div class="panel-header">
+              <h2>Controlli</h2>
+              <span>Gestisci file e tracciamento</span>
+            </div>
+            <div class="file-controls">
+              <label class="file-label">
+                <span>Importa GPX</span>
+                <input type="file" id="importFile" accept=".gpx,.gtx" />
+              </label>
+              <button id="exportButton" disabled>Esporta GPX</button>
+            </div>
+          </div>
+
+          <div class="panel card-panel destination-panel">
+            <div class="panel-header">
+              <h2>Destinazione</h2>
+              <span>Cerca e naviga</span>
+            </div>
+            <div class="search-row">
+              <input id="addressInput" type="search" placeholder="Cerca indirizzo o paese" />
+              <button id="searchButton">Cerca</button>
+            </div>
+            <div class="nav-row">
+              <button id="navigateButton" disabled>Naviga</button>
+              <button id="clearDestination" disabled>Annulla</button>
+            </div>
+            <div class="route-summary">
+              <span id="routeInfo">Nessuna destinazione impostata.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="instructions-panel card-panel">
+          <h3>Istruzioni di navigazione</h3>
+          <div id="navigationInstructions" class="instructions">Qui appariranno le indicazioni di percorso.</div>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

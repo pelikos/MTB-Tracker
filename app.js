@@ -163,6 +163,12 @@ function addTrackPoint(position) {
     accuracy: position.coords.accuracy,
   };
 
+  // Always update the visible current location (marker/accuracy)
+  updateCurrentLocation(position, false);
+
+  // If we're not actively recording a track, do not add points
+  if (!tracking) return;
+
   if (point.ele === null && currentAltitude !== null) {
     point.ele = currentAltitude;
   }
@@ -184,7 +190,6 @@ function addTrackPoint(position) {
     }).addTo(map);
   }
 
-  updateCurrentLocation(position, false);
   updateTrackLine();
   updateStats();
 }
@@ -379,7 +384,16 @@ function showRoute(route, destination) {
   if (lastPosition) bounds.extend([lastPosition.lat, lastPosition.lng]);
   map.fitBounds(bounds, { padding: [20, 20] });
 
-  const instructions = route.legs[0].steps.map((step) => `• ${step.maneuver.instruction}`).slice(0, 12);
+  const steps = (route.legs && route.legs[0] && route.legs[0].steps) ? route.legs[0].steps : [];
+  const instructions = steps.slice(0, 12).map((step) => {
+    const instr = step.maneuver && step.maneuver.instruction;
+    if (instr) return `• ${instr}`;
+    const type = step.maneuver && step.maneuver.type ? step.maneuver.type : '';
+    const mod = step.maneuver && step.maneuver.modifier ? step.maneuver.modifier : '';
+    const name = step.name || '';
+    const text = [type, mod, name].filter(Boolean).join(' ');
+    return `• ${text || 'Continua'}`;
+  });
   navigationInstructions.innerHTML = instructions.map((text) => `<p>${text}</p>`).join('');
   routeInfo.textContent = `Percorso: ${(route.distance / 1000).toFixed(2)} km • ${(route.duration / 60).toFixed(0)} min`;
 }
