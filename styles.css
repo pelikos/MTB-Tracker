@@ -35,6 +35,16 @@ body.dark-theme {
   padding: 0 16px 24px;
 }
 
+.map-section {
+  position: relative;
+  min-height: 420px;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.20);
+  background: linear-gradient(180deg, #090b0f 0%, #0f131b 100%);
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -106,10 +116,18 @@ main.main-area {
   width: 100%;
   height: 100%;
   min-height: 420px;
+  position: relative;
+  z-index: 1;
+}
+
+.map-badge,
+.stats-grid,
+.fab-row {
+  position: absolute;
+  z-index: 10;
 }
 
 .map-badge {
-  position: absolute;
   right: 18px;
   top: 18px;
   padding: 14px 16px;
@@ -139,13 +157,22 @@ main.main-area {
 }
 
 .stats-grid {
-  position: absolute;
   left: 18px;
-  bottom: 20px;
+  bottom: 120px;
   right: 18px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
+}
+
+.fab-row {
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  width: calc(100% - 36px);
+  justify-content: center;
 }
 
 .stat-card {
@@ -250,6 +277,33 @@ button:disabled {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   gap: 18px;
+}
+
+.card-panel {
+  background: rgba(10, 13, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+  border-radius: 28px;
+  padding: 22px;
+}
+
+.card-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+.card-panel {
+  position: relative;
+}
+
+.instructions-panel {
+  background: rgba(10, 13, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
 }
 
 .card-panel {
@@ -369,14 +423,23 @@ button:disabled {
   }
   .stats-grid {
     grid-template-columns: 1fr;
+    position: static;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    gap: 12px;
   }
   .fab-row {
     position: static;
     transform: none;
     width: 100%;
+    margin-top: 12px;
   }
   .fab-row button {
     width: 100%;
+  }
+  .map-section {
+    min-height: 480px;
   }
 }
 
@@ -389,5 +452,8 @@ button:disabled {
   .nav-row,
   .file-controls {
     flex-direction: column;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 }
