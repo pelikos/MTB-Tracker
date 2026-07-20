@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>MTB Tracker</title>
+  <title>Pelikos Ride</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -11,9 +11,8 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="brand-group">
-        <div class="logo-mark">MTB</div>
         <div>
-          <h1>MTB Tracker</h1>
+          <h1 class="brand-title">Pelikos Ride</h1>
           <p>Tracciamento, navigazione e statistiche in tempo reale</p>
         </div>
       </div>
@@ -29,7 +28,9 @@
           <strong id="gpsStatus">—</strong>
           <small id="gpsAccuracy">Precisione —</small>
         </div>
+      </section>
 
+      <section class="stats-section">
         <div class="stats-grid">
           <article class="stat-card stat-large">
             <span>Velocità</span>

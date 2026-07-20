@@ -32,17 +32,12 @@ body.dark-theme {
 .app-shell {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 0 16px 24px;
+  padding: 0 16px 22px 16px;
 }
 
-.map-section {
-  position: relative;
-  min-height: 420px;
-  border-radius: 28px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.20);
-  background: linear-gradient(180deg, #090b0f 0%, #0f131b 100%);
+body {
+  background: radial-gradient(circle at top, rgba(255, 59, 59, 0.08), transparent 28%),
+              linear-gradient(180deg, #090b0f 0%, #0e1220 100%);
 }
 
 .topbar {
@@ -51,6 +46,31 @@ body.dark-theme {
   justify-content: space-between;
   gap: 18px;
   padding: 18px 0 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+  color: #ff3b3b;
+}
+
+.topbar p {
+  margin: 6px 0 0;
+  color: #b0b9ce;
+  font-size: 0.98rem;
+}
+
+.map-section {
+  position: relative;
+  min-height: 200px;
+  max-height: 260px;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 32px 70px rgba(0, 0, 0, 0.22);
+  background: linear-gradient(180deg, #0d1118 0%, #101623 100%);
 }
 
 .brand-group {
@@ -59,24 +79,15 @@ body.dark-theme {
   gap: 14px;
 }
 
-.logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: #14171d;
-  color: #ff6a00;
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.08em;
-}
-
 .topbar h1 {
   margin: 0;
   font-size: 1.35rem;
   letter-spacing: 0.01em;
+  color: #ff3b3b;
+}
+
+.logo-mark {
+  display: none;
 }
 
 .topbar p {
@@ -100,12 +111,13 @@ body.dark-theme {
 
 main.main-area {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 
 .map-section {
   position: relative;
-  min-height: 420px;
+  min-height: 220px;
+  max-height: 260px;
   border-radius: 28px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -115,73 +127,66 @@ main.main-area {
 #map {
   width: 100%;
   height: 100%;
-  min-height: 420px;
   position: relative;
   z-index: 1;
 }
 
-.map-badge,
-.stats-grid,
-.fab-row {
-  position: absolute;
-  z-index: 10;
-}
-
 .map-badge {
+  position: absolute;
   right: 18px;
   top: 18px;
-  padding: 14px 16px;
-  border-radius: 18px;
+  padding: 10px 14px;
+  border-radius: 16px;
   backdrop-filter: blur(14px);
   background: rgba(10, 13, 20, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e5e9f2;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  z-index: 10;
 }
 
 .map-badge span {
   color: #8da2c6;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
 }
 
 .map-badge strong {
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .map-badge small {
   color: #9aa2b3;
 }
 
-.stats-grid {
-  left: 18px;
-  bottom: 120px;
-  right: 18px;
+.stats-section {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
 .fab-row {
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
   display: flex;
   gap: 14px;
-  width: calc(100% - 36px);
   justify-content: center;
 }
 
 .stat-card {
-  background: rgba(10, 13, 20, 0.82);
+  background: linear-gradient(180deg, rgba(14, 18, 29, 0.98), rgba(15, 19, 30, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 22px;
-  padding: 18px 16px;
-  color: #e7ebf7;
-  min-height: 104px;
+  border-radius: 26px;
+  padding: 20px 18px;
+  color: #f4f6fb;
+  min-height: 110px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .stat-large {
@@ -193,45 +198,40 @@ main.main-area {
 
 .stat-card span {
   display: block;
-  color: #a7b2d4;
-  font-size: 0.82rem;
+  color: #8ca2e0;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .stat-card strong {
   display: flex;
   align-items: baseline;
-  font-size: 2rem;
+  font-size: 2.2rem;
   line-height: 1;
 }
 
 .value-group {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
 }
 
 .stat-card small {
-  color: #8da2c6;
+  color: #9bb0d5;
   font-size: 0.95rem;
 }
 
 .stat-card p {
-  margin: 10px 0 0;
-  color: #aab3c9;
+  margin: 14px 0 0;
+  color: #b2bfda;
   font-size: 0.92rem;
 }
 
 .fab-row {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
   display: flex;
   gap: 14px;
-  width: calc(100% - 36px);
   justify-content: center;
 }
 
@@ -239,13 +239,32 @@ main.main-area {
   min-width: 150px;
   padding: 16px 24px;
   border-radius: 999px;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.24);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.fab-row button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .primary {
-  background: #ff6a00;
+  background: #28c76f;
   color: #0b0d10;
   border: none;
+}
+
+.primary:hover:not(:disabled) {
+  background: #20b763;
+}
+
+#stopButton {
+  background: #ff3b3b;
+  color: #ffffff;
+  border: none;
+}
+
+#stopButton:hover:not(:disabled) {
+  background: #e12f2f;
 }
 
 button {
@@ -255,12 +274,13 @@ button {
   border-radius: 16px;
   padding: 14px 18px;
   cursor: pointer;
-  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.20);
 }
 
 button:disabled {
@@ -423,23 +443,19 @@ button:disabled {
   }
   .stats-grid {
     grid-template-columns: 1fr;
-    position: static;
-    bottom: auto;
-    left: auto;
-    right: auto;
     gap: 12px;
   }
   .fab-row {
-    position: static;
-    transform: none;
     width: 100%;
     margin-top: 12px;
+    flex-wrap: wrap;
   }
   .fab-row button {
     width: 100%;
   }
   .map-section {
-    min-height: 480px;
+    min-height: 200px;
+    max-height: 240px;
   }
 }
 
