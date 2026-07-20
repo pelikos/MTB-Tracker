@@ -64,6 +64,7 @@ function setTrackingStatus(text, statusClass) {
   if (!trackingStatusEl) return;
   trackingStatusEl.textContent = text;
   trackingStatusEl.className = `status-pill ${statusClass}`;
+  document.body.classList.toggle('is-tracking', statusClass === 'running');
 }
 
 function updateStats() {
@@ -92,9 +93,9 @@ function updateTrackLine() {
   const path = trackPoints.map((point) => [point.lat, point.lng]);
   if (!trackLine) {
     trackLine = L.polyline(path, {
-      color: '#111111',
+      color: '#64d37d',
       weight: 5,
-      opacity: 0.85,
+      opacity: 0.9,
     }).addTo(map);
   } else {
     trackLine.setLatLngs(path);
@@ -127,8 +128,8 @@ function updateCurrentLocation(position, setView = false) {
   if (!currentPositionMarker) {
     currentPositionMarker = L.circleMarker([lat, lng], {
       radius: 8,
-      fillColor: '#111111',
-      color: '#fff',
+      fillColor: '#64d37d',
+      color: '#ffffff',
       weight: 2,
       fillOpacity: 1,
     }).addTo(map);
@@ -139,11 +140,11 @@ function updateCurrentLocation(position, setView = false) {
   if (!accuracyCircle) {
     accuracyCircle = L.circle([lat, lng], {
       radius: accuracy || 25,
-      color: '#111111',
+      color: '#64d37d',
       weight: 1,
-      opacity: 0.5,
-      fillColor: '#111111',
-      fillOpacity: 0.08,
+      opacity: 0.4,
+      fillColor: '#64d37d',
+      fillOpacity: 0.12,
     }).addTo(map);
   } else {
     accuracyCircle.setLatLng([lat, lng]).setRadius(accuracy || 25);
@@ -170,10 +171,8 @@ function addTrackPoint(position) {
     accuracy: position.coords.accuracy,
   };
 
-  // Always update the visible current location (marker/accuracy)
   updateCurrentLocation(position, false);
 
-  // If we're not actively recording a track, do not add points
   if (!tracking) return;
 
   if (point.ele === null && currentAltitude !== null) {
@@ -190,8 +189,8 @@ function addTrackPoint(position) {
     map.setView([point.lat, point.lng], 16);
     L.circleMarker([point.lat, point.lng], {
       radius: 6,
-      fillColor: '#111111',
-      color: '#111111',
+      fillColor: '#64d37d',
+      color: '#64d37d',
       weight: 2,
       fillOpacity: 1,
     }).addTo(map);
@@ -381,9 +380,9 @@ function showRoute(route, destination) {
 
   const coords = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
   routeLine = L.polyline(coords, {
-    color: '#444444',
+    color: '#2fbf6d',
     weight: 5,
-    opacity: 0.85,
+    opacity: 0.9,
     dashArray: '8,8',
   }).addTo(map);
 
@@ -492,17 +491,13 @@ function clearDestinationRoute() {
 }
 
 function updateThemeButton() {
-  if (document.body.classList.contains('dark-theme')) {
-    themeToggle.textContent = '🌙';
-    themeToggle.setAttribute('aria-label', 'Tema scuro attivo');
-  } else {
-    themeToggle.textContent = '☀️';
-    themeToggle.setAttribute('aria-label', 'Tema chiaro attivo');
-  }
+  const lightTheme = document.body.classList.contains('theme-light');
+  themeToggle.textContent = lightTheme ? '🌙' : '☀️';
+  themeToggle.setAttribute('aria-label', lightTheme ? 'Tema scuro attivo' : 'Tema chiaro attivo');
 }
 
 function toggleTheme() {
-  document.body.classList.toggle('dark-theme');
+  document.body.classList.toggle('theme-light');
   updateThemeButton();
 }
 
@@ -549,3 +544,4 @@ themeToggle.addEventListener('click', toggleTheme);
 
 initMap();
 updateThemeButton();
+setTrackingStatus('Pronto', 'ready');
