@@ -18,6 +18,7 @@ const currentAltitudeEl = document.getElementById('currentAltitude');
 const routeAltitudeEl = document.getElementById('routeAltitude');
 const gpsAccuracyEl = document.getElementById('gpsAccuracy');
 const gpsStatusEl = document.getElementById('gpsStatus');
+const trackingStatusEl = document.getElementById('trackingStatus');
 
 let map = null;
 let trackLine = null;
@@ -57,6 +58,12 @@ function computeDistance(a, b) {
   const sinDLat = Math.sin(dLat / 2);
   const sinDLon = Math.sin(dLon / 2);
   return 2 * R * Math.asin(Math.sqrt(sinDLat * sinDLat + sinDLon * sinDLon * Math.cos(lat1) * Math.cos(lat2)));
+}
+
+function setTrackingStatus(text, statusClass) {
+  if (!trackingStatusEl) return;
+  trackingStatusEl.textContent = text;
+  trackingStatusEl.className = `status-pill ${statusClass}`;
 }
 
 function updateStats() {
@@ -216,6 +223,7 @@ function startTracking() {
   trackPoints = [];
   startTimestamp = Date.now();
   lastPosition = null;
+  setTrackingStatus('Tracking attivo', 'running');
   if (trackLine) {
     map.removeLayer(trackLine);
     trackLine = null;
@@ -243,6 +251,7 @@ function stopTracking() {
   stopButton.disabled = true;
   startButton.disabled = false;
   exportButton.disabled = trackPoints.length === 0;
+  setTrackingStatus('Tracking fermo', 'stopped');
   clearInterval(elapsedTimer);
   updateStats();
 }

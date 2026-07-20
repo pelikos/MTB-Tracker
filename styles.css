@@ -231,6 +231,8 @@ main.main-area {
 
 .fab-row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 14px;
   justify-content: center;
 }
@@ -245,6 +247,36 @@ main.main-area {
 
 .fab-row button:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2f2f2;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.status-pill.ready {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #d7e0ff;
+}
+
+.status-pill.running {
+  background: rgba(40, 199, 111, 0.16);
+  border-color: rgba(40, 199, 111, 0.28);
+  color: #97ffbd;
+}
+
+.status-pill.stopped {
+  background: rgba(255, 59, 59, 0.16);
+  border-color: rgba(255, 59, 59, 0.28);
+  color: #ffb2b2;
 }
 
 .primary {
