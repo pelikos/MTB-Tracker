@@ -1,0 +1,17 @@
+# Ignore operating system files
+.DS_Store
+Thumbs.db
+
+# Ignore editor files
+.vscode/
+*.swp
+*.swo
+
+# Ignore temporary files
+*.log
+*.tmp
+
+# Ignore npm/node artifacts if any
+node_modules/
+package-lock.json
+yarn.lock

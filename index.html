@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>MTB Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+eDUk3bQdQzull0iCReH9FdL1AGp3qIex0B7rQzt0=" crossorigin="" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>MTB Tracker</h1>
+        <p>Monocromo | GPS | Navigazione</p>
+      </div>
+      <button id="toggleTheme" aria-label="Cambia tema">⚪</button>
+    </header>
+
+    <section class="map-card">
+      <div id="map"></div>
+    </section>
+
+    <section class="stats-card">
+      <div class="stat-row">
+        <div>
+          <span>Velocità istantanea</span>
+          <strong id="instantSpeed">0.0</strong> km/h
+        </div>
+        <div>
+          <span>Media</span>
+          <strong id="averageSpeed">0.0</strong> km/h
+        </div>
+      </div>
+      <div class="stat-row">
+        <div>
+          <span>Distanza</span>
+          <strong id="distance">0.00</strong> km
+        </div>
+        <div>
+          <span>Tempo</span>
+          <strong id="elapsed">00:00:00</strong>
+        </div>
+      </div>
+      <div class="stat-row altitude-row">
+        <div>
+          <span>Altitudine attuale</span>
+          <strong id="currentAltitude">—</strong>
+        </div>
+        <div>
+          <span>Prevista percorso</span>
+          <strong id="routeAltitude">—</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls-card">
+      <div class="buttons-row">
+        <button id="startButton" class="primary">Avvia</button>
+        <button id="stopButton" disabled>Ferma</button>
+      </div>
+      <div class="file-controls">
+        <label class="file-label">
+          Importa .gpx
+          <input type="file" id="importFile" accept=".gpx,.gtx" />
+        </label>
+        <button id="exportButton" disabled>Esporta .gpx</button>
+      </div>
+    </section>
+
+    <section class="navigation-card">
+      <h2>Destinazione</h2>
+      <div class="search-row">
+        <input id="addressInput" type="search" placeholder="Cerca indirizzo o paese" />
+        <button id="searchButton">Cerca</button>
+      </div>
+      <div class="nav-row">
+        <button id="navigateButton" disabled>Naviga</button>
+        <button id="clearDestination" disabled>Annulla</button>
+      </div>
+      <div class="route-summary">
+        <span id="routeInfo">Nessuna destinazione impostata.</span>
+      </div>
+      <div id="navigationInstructions" class="instructions"></div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kQfrun7t2b3t2xu7h4HqQ3tX5NRbrk2vF5b6U=" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>

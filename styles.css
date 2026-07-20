@@ -1,0 +1,188 @@
+:root {
+  color-scheme: dark;
+  background: #ffffff;
+  color: #111111;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #ffffff;
+}
+
+body {
+  padding: 0;
+}
+
+button, input {
+  font: inherit;
+}
+
+.app-shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 8px;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.map-card {
+  margin: 18px 0 16px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  height: 320px;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.stats-card, .controls-card, .navigation-card {
+  margin-bottom: 18px;
+  border: 1px solid #ddd;
+  border-radius: 18px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.stats-card .stat-row,
+.controls-card .buttons-row,
+.controls-card .file-controls,
+.navigation-card .search-row,
+.navigation-card .nav-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stats-card .stat-row {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.altitude-row {
+  align-items: flex-end;
+}
+
+.stats-card span,
+.route-summary,
+.instructions {
+  display: block;
+  color: #666;
+}
+
+.stats-card strong {
+  display: block;
+  font-size: 1.3rem;
+  margin-top: 6px;
+}
+
+.primary {
+  background: #111111;
+  color: #ffffff;
+  border: none;
+}
+
+button {
+  border: 1px solid #111111;
+  background: transparent;
+  color: #111;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.file-controls {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #111;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.file-label input {
+  display: none;
+}
+
+.navigation-card h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.navigation-card input[type="search"] {
+  flex: 1;
+  width: 100%;
+  border: 1px solid #111;
+  border-radius: 12px;
+  padding: 14px 14px;
+  background: white;
+  color: #111;
+}
+
+.navigation-card input[type="search"]::placeholder {
+  color: #999;
+}
+
+.route-summary {
+  margin-top: 14px;
+}
+
+.instructions {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.instructions p {
+  margin: 0 0 10px;
+}
+
+@media (max-width: 640px) {
+  .stats-card .stat-row,
+  .controls-card .buttons-row,
+  .controls-card .file-controls,
+  .navigation-card .search-row,
+  .navigation-card .nav-row {
+    flex-direction: column;
+  }
+  button {
+    width: 100%;
+  }
+}
