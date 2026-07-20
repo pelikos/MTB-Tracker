@@ -15,11 +15,16 @@ const distanceEl = document.getElementById('distance');
 const elapsedEl = document.getElementById('elapsed');
 const currentAltitudeEl = document.getElementById('currentAltitude');
 const routeAltitudeEl = document.getElementById('routeAltitude');
+const gpsAccuracyEl = document.getElementById('gpsAccuracy');
+const gpsStatusEl = document.getElementById('gpsStatus');
 
 let map = null;
 let trackLine = null;
 let routeLine = null;
 let destinationMarker = null;
+let currentPositionMarker = null;
+let accuracyCircle = null;
+let currentWatchId = null;
 let watchId = null;
 let tracking = false;
 let trackPoints = [];
@@ -27,6 +32,7 @@ let routeData = null;
 let startTimestamp = null;
 let elapsedTimer = null;
 let lastPosition = null;
+let currentPosition = null;
 let currentAltitude = null;
 let routeAltitudeSummary = null;
 
@@ -60,14 +66,18 @@ function updateStats() {
 
   const elapsedSeconds = startTimestamp ? Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000)) : 0;
   const averageSpeed = elapsedSeconds > 0 ? (totalDistance / elapsedSeconds) * 3.6 : 0;
-  const instantSpeed = lastPosition && lastPosition.speed !== null ? lastPosition.speed * 3.6 : 0;
+  const instantSpeed = lastPosition && lastPosition.speed !== null ? lastPosition.speed * 3.6 : (currentPosition && currentPosition.speed !== null ? currentPosition.speed * 3.6 : 0);
+  const altitude = currentAltitude !== null ? currentAltitude : currentPosition?.altitude ?? null;
+  const accuracy = currentPosition?.accuracy ?? null;
 
   distanceEl.textContent = toKm(totalDistance);
   averageSpeedEl.textContent = averageSpeed.toFixed(1);
   elapsedEl.textContent = formatTime(elapsedSeconds);
   instantSpeedEl.textContent = instantSpeed.toFixed(1);
-  currentAltitudeEl.textContent = currentAltitude !== null ? `${currentAltitude.toFixed(0)} m` : '—';
+  currentAltitudeEl.textContent = altitude !== null ? `${Math.round(altitude)} m` : '—';
   routeAltitudeEl.textContent = routeAltitudeSummary ? routeAltitudeSummary : '—';
+  gpsAccuracyEl.textContent = accuracy !== null ? `${Math.round(accuracy)} m` : '—';
+  gpsStatusEl.textContent = accuracy !== null ? getGpsQuality(accuracy) : '—';
 }
 
 function updateTrackLine() {
@@ -83,6 +93,65 @@ function updateTrackLine() {
   }
 }
 
+function getGpsQuality(accuracy) {
+  if (accuracy <= 10) return 'Eccellente';
+  if (accuracy <= 25) return 'Ottima';
+  if (accuracy <= 50) return 'Buona';
+  if (accuracy <= 100) return 'Moderata';
+  return 'Bassa';
+}
+
+function updateCurrentLocation(position, setView = false) {
+  const lat = position.coords.latitude;
+  const lng = position.coords.longitude;
+  const accuracy = position.coords.accuracy;
+  const ele = position.coords.altitude;
+
+  currentPosition = {
+    lat,
+    lng,
+    accuracy,
+    altitude: ele,
+    speed: position.coords.speed,
+    time: position.timestamp,
+  };
+
+  if (!currentPositionMarker) {
+    currentPositionMarker = L.circleMarker([lat, lng], {
+      radius: 8,
+      fillColor: '#111111',
+      color: '#fff',
+      weight: 2,
+      fillOpacity: 1,
+    }).addTo(map);
+  } else {
+    currentPositionMarker.setLatLng([lat, lng]);
+  }
+
+  if (!accuracyCircle) {
+    accuracyCircle = L.circle([lat, lng], {
+      radius: accuracy || 25,
+      color: '#111111',
+      weight: 1,
+      opacity: 0.5,
+      fillColor: '#111111',
+      fillOpacity: 0.08,
+    }).addTo(map);
+  } else {
+    accuracyCircle.setLatLng([lat, lng]).setRadius(accuracy || 25);
+  }
+
+  if (setView) {
+    map.setView([lat, lng], 16);
+  }
+
+  if (ele !== null && ele !== undefined) {
+    currentAltitude = ele;
+  }
+
+  updateStats();
+}
+
 function addTrackPoint(position) {
   const point = {
     lat: position.coords.latitude,
@@ -90,6 +159,7 @@ function addTrackPoint(position) {
     ele: position.coords.altitude,
     time: position.timestamp,
     speed: position.coords.speed,
+    accuracy: position.coords.accuracy,
   };
 
   if (point.ele === null && currentAltitude !== null) {
@@ -113,6 +183,7 @@ function addTrackPoint(position) {
     }).addTo(map);
   }
 
+  updateCurrentLocation(position, false);
   updateTrackLine();
   updateStats();
 }
@@ -318,7 +389,10 @@ function setDestinationSummary(destination) {
 
 async function searchDestination() {
   const query = addressInput.value.trim();
-  if (!query) return;
+  if (!query) {
+    routeInfo.textContent = 'Inserisci un indirizzo o una città.';
+    return;
+  }
   searchButton.disabled = true;
   routeInfo.textContent = 'Ricerca indirizzo...';
   try {
@@ -338,7 +412,7 @@ async function searchDestination() {
     navigateButton.disabled = false;
     clearDestination.disabled = false;
   } catch (err) {
-    routeInfo.textContent = 'Errore ricerca indirizzo.';
+    routeInfo.textContent = `Errore ricerca indirizzo: ${err.message}`;
   } finally {
     searchButton.disabled = false;
   }
@@ -346,14 +420,16 @@ async function searchDestination() {
 
 async function startNavigation() {
   if (!routeData) return;
-  if (!lastPosition) {
-    routeInfo.textContent = 'Attendere la prima posizione GPS per avviare la navigazione.';
+  const current = lastPosition
+    ? { lat: lastPosition.lat, lng: lastPosition.lng }
+    : currentPosition
+      ? { lat: currentPosition.lat, lng: currentPosition.lng }
+      : null;
+
+  if (!current) {
+    routeInfo.textContent = 'Attendere la posizione GPS prima di avviare la navigazione.';
     return;
   }
-  const current = {
-    lat: lastPosition.lat,
-    lng: lastPosition.lng,
-  };
   routeInfo.textContent = 'Calcolo percorso...';
   navigateButton.disabled = true;
   try {
@@ -367,7 +443,7 @@ async function startNavigation() {
     }
     updateStats();
   } catch (err) {
-    routeInfo.textContent = 'Errore nel calcolo del percorso.';
+    routeInfo.textContent = `Errore nel calcolo del percorso: ${err.message}`;
   } finally {
     navigateButton.disabled = false;
   }
@@ -402,17 +478,18 @@ function initMap() {
 }
 
 function initLocation() {
-  if (!navigator.geolocation) return;
+  if (!navigator.geolocation || currentWatchId !== null) return;
+
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      map.setView([pos.coords.latitude, pos.coords.longitude], 14);
-      if (pos.coords.altitude !== null) {
-        currentAltitude = pos.coords.altitude;
-        updateStats();
-      }
-    },
-    () => {},
-    { enableHighAccuracy: true }
+    (pos) => updateCurrentLocation(pos, true),
+    showPositionError,
+    { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+  );
+
+  currentWatchId = navigator.geolocation.watchPosition(
+    (pos) => updateCurrentLocation(pos, false),
+    showPositionError,
+    { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
   );
 }
 
@@ -421,6 +498,12 @@ stopButton.addEventListener('click', () => stopTracking());
 exportButton.addEventListener('click', exportGpx);
 importFile.addEventListener('change', importFileHandler);
 searchButton.addEventListener('click', searchDestination);
+addressInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    searchDestination();
+  }
+});
 navigateButton.addEventListener('click', startNavigation);
 clearDestination.addEventListener('click', clearDestinationRoute);
 

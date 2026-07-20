@@ -84,6 +84,14 @@ button, input {
   margin-bottom: 14px;
 }
 
+.gps-row {
+  align-items: flex-end;
+}
+
+.stats-card .stat-row div {
+  min-width: 45%;
+}
+
 .altitude-row {
   align-items: flex-end;
 }
