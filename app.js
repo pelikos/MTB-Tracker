@@ -1,4 +1,4 @@
-﻿const startButton = document.getElementById('startButton');
+const startButton = document.getElementById('startButton');
 const stopButton = document.getElementById('stopButton');
 const exportButton = document.getElementById('exportButton');
 const importFile = document.getElementById('importFile');
@@ -7,7 +7,8 @@ const searchButton = document.getElementById('searchButton');
 const navigateButton = document.getElementById('navigateButton');
 const clearDestination = document.getElementById('clearDestination');
 const routeInfo = document.getElementById('routeInfo');
-const navigationInstructions = document.getElementById('navigationInstructions');
+const elevationSummaryEl = document.getElementById('elevationSummary');
+const elevationChartEl = document.getElementById('elevationChart');
 const themeToggle = document.getElementById('toggleTheme');
 
 const instantSpeedEl = document.getElementById('instantSpeed');
@@ -15,10 +16,18 @@ const averageSpeedEl = document.getElementById('averageSpeed');
 const distanceEl = document.getElementById('distance');
 const elapsedEl = document.getElementById('elapsed');
 const currentAltitudeEl = document.getElementById('currentAltitude');
-const routeAltitudeEl = document.getElementById('routeAltitude');
 const gpsAccuracyEl = document.getElementById('gpsAccuracy');
 const gpsStatusEl = document.getElementById('gpsStatus');
 const trackingStatusEl = document.getElementById('trackingStatus');
+
+const SPEED_NOISE_THRESHOLD_MS = 0.5; // m/s (~1.8 km/h) - below this, treat GPS speed jitter as stationary
+
+const currentLocationIcon = L.divIcon({
+  className: 'current-pin-wrapper',
+  html: '<span class="current-pin"><span class="current-pin-pulse"></span></span>',
+  iconSize: [26, 26],
+  iconAnchor: [13, 24],
+});
 
 let map = null;
 let trackLine = null;
@@ -36,7 +45,8 @@ let elapsedTimer = null;
 let lastPosition = null;
 let currentPosition = null;
 let currentAltitude = null;
-let routeAltitudeSummary = null;
+let elevationPointsCache = [];
+let elevationGeometry = null;
 
 function formatTime(seconds) {
   const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -66,6 +76,14 @@ function setTrackingStatus(text, statusClass) {
   trackingStatusEl.className = `status-pill ${statusClass}`;
 }
 
+function getGpsQuality(accuracy) {
+  if (accuracy <= 10) return 'Eccellente';
+  if (accuracy <= 25) return 'Ottima';
+  if (accuracy <= 50) return 'Buona';
+  if (accuracy <= 100) return 'Moderata';
+  return 'Bassa';
+}
+
 function updateStats() {
   const totalDistance = trackPoints.reduce((sum, point, index) => {
     if (index === 0) return 0;
@@ -74,7 +92,12 @@ function updateStats() {
 
   const elapsedSeconds = startTimestamp ? Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000)) : 0;
   const averageSpeed = elapsedSeconds > 0 ? (totalDistance / elapsedSeconds) * 3.6 : 0;
-  const instantSpeed = lastPosition && lastPosition.speed !== null ? lastPosition.speed * 3.6 : (currentPosition && currentPosition.speed !== null ? currentPosition.speed * 3.6 : 0);
+
+  const rawSpeed = lastPosition && lastPosition.speed !== null && lastPosition.speed !== undefined
+    ? lastPosition.speed
+    : (currentPosition && currentPosition.speed !== null && currentPosition.speed !== undefined ? currentPosition.speed : 0);
+  const instantSpeed = rawSpeed > SPEED_NOISE_THRESHOLD_MS ? rawSpeed * 3.6 : 0;
+
   const altitude = currentAltitude !== null ? currentAltitude : currentPosition?.altitude ?? null;
   const accuracy = currentPosition?.accuracy ?? null;
 
@@ -83,7 +106,6 @@ function updateStats() {
   elapsedEl.textContent = formatTime(elapsedSeconds);
   instantSpeedEl.textContent = instantSpeed.toFixed(1);
   currentAltitudeEl.textContent = altitude !== null ? `${Math.round(altitude)} m` : '—';
-  routeAltitudeEl.textContent = routeAltitudeSummary ? routeAltitudeSummary : '—';
   gpsAccuracyEl.textContent = accuracy !== null ? `${Math.round(accuracy)} m` : '—';
   gpsStatusEl.textContent = accuracy !== null ? getGpsQuality(accuracy) : '—';
 }
@@ -101,19 +123,12 @@ function updateTrackLine() {
   }
 }
 
-function getGpsQuality(accuracy) {
-  if (accuracy <= 10) return 'Eccellente';
-  if (accuracy <= 25) return 'Ottima';
-  if (accuracy <= 50) return 'Buona';
-  if (accuracy <= 100) return 'Moderata';
-  return 'Bassa';
-}
-
 function updateCurrentLocation(position, setView = false) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
   const accuracy = position.coords.accuracy;
   const ele = position.coords.altitude;
+  const latlng = [lat, lng];
 
   currentPosition = {
     lat,
@@ -125,32 +140,28 @@ function updateCurrentLocation(position, setView = false) {
   };
 
   if (!currentPositionMarker) {
-    currentPositionMarker = L.circleMarker([lat, lng], {
-      radius: 8,
-      fillColor: '#111111',
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 1,
-    }).addTo(map);
+    currentPositionMarker = L.marker(latlng, { icon: currentLocationIcon, zIndexOffset: 1000 }).addTo(map);
   } else {
-    currentPositionMarker.setLatLng([lat, lng]);
+    currentPositionMarker.setLatLng(latlng);
   }
 
   if (!accuracyCircle) {
-    accuracyCircle = L.circle([lat, lng], {
+    accuracyCircle = L.circle(latlng, {
       radius: accuracy || 25,
-      color: '#111111',
+      color: '#ff3b3b',
       weight: 1,
-      opacity: 0.5,
-      fillColor: '#111111',
+      opacity: 0.4,
+      fillColor: '#ff3b3b',
       fillOpacity: 0.08,
     }).addTo(map);
   } else {
-    accuracyCircle.setLatLng([lat, lng]).setRadius(accuracy || 25);
+    accuracyCircle.setLatLng(latlng).setRadius(accuracy || 25);
   }
 
   if (setView) {
-    map.setView([lat, lng], 16);
+    map.setView(latlng, 16);
+  } else if (routeData) {
+    map.panTo(latlng, { animate: true });
   }
 
   if (ele !== null && ele !== undefined) {
@@ -345,26 +356,181 @@ async function requestRoute(start, end) {
   return data.routes[0];
 }
 
-async function elevationProfile(coords) {
-  if (!coords.length) return null;
-  const sample = coords.filter((_, idx) => idx % Math.max(1, Math.floor(coords.length / 10)) === 0);
-  const query = sample.map((pt) => `${pt[1]},${pt[0]}`).join('|');
+async function elevationProfile(coordinates) {
+  if (!coordinates.length) return null;
+
+  const sampleCount = Math.min(40, coordinates.length);
+  const step = Math.max(1, Math.floor(coordinates.length / sampleCount));
+  const sampled = [];
+  for (let i = 0; i < coordinates.length; i += step) {
+    sampled.push(coordinates[i]);
+  }
+  if (sampled[sampled.length - 1] !== coordinates[coordinates.length - 1]) {
+    sampled.push(coordinates[coordinates.length - 1]);
+  }
+
+  const query = sampled.map(([lng, lat]) => `${lat},${lng}`).join('|');
   try {
     const response = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${query}`);
     if (!response.ok) return null;
     const data = await response.json();
-    if (!data.results) return null;
-    const altitudes = data.results.map((item) => item.elevation);
+    if (!data.results || !data.results.length) return null;
+
+    let cumulative = 0;
+    const points = data.results.map((item, index) => {
+      if (index > 0) {
+        const prev = sampled[index - 1];
+        const curr = sampled[index];
+        cumulative += computeDistance({ lat: prev[1], lng: prev[0] }, { lat: curr[1], lng: curr[0] });
+      }
+      return { distance: cumulative, ele: item.elevation };
+    });
+
+    const altitudes = points.map((p) => p.ele);
     const minAlt = Math.min(...altitudes);
     const maxAlt = Math.max(...altitudes);
-    const gain = altitudes.reduce((sum, value, index) => {
-      if (index === 0) return 0;
-      return sum + Math.max(0, value - altitudes[index - 1]);
-    }, 0);
-    return { minAlt, maxAlt, gain };
+    let gain = 0;
+    let loss = 0;
+    for (let i = 1; i < altitudes.length; i += 1) {
+      const delta = altitudes[i] - altitudes[i - 1];
+      if (delta > 0) gain += delta;
+      else loss += -delta;
+    }
+
+    return { points, minAlt, maxAlt, gain, loss };
   } catch (error) {
     return null;
   }
+}
+
+function niceStep(range, targetTicks = 4) {
+  if (!range || range <= 0) return 10;
+  const rough = range / targetTicks;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
+  const residual = rough / magnitude;
+  let niceResidual;
+  if (residual > 5) niceResidual = 10;
+  else if (residual > 2) niceResidual = 5;
+  else if (residual > 1) niceResidual = 2;
+  else niceResidual = 1;
+  return niceResidual * magnitude;
+}
+
+function clearElevationChart() {
+  elevationPointsCache = [];
+  elevationGeometry = null;
+  elevationSummaryEl.textContent = 'Seleziona una destinazione e avvia la navigazione';
+  elevationChartEl.innerHTML = '<p class="elevation-empty">Il profilo altimetrico del percorso apparirà qui.</p>';
+}
+
+function renderElevationChart(profile) {
+  elevationPointsCache = profile.points;
+
+  const width = 600;
+  const height = 200;
+  const padLeft = 46;
+  const padRight = 14;
+  const padTop = 16;
+  const padBottom = 26;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+  const totalDistance = profile.points[profile.points.length - 1].distance || 1;
+
+  const step = niceStep(profile.maxAlt - profile.minAlt);
+  const niceMin = Math.floor(profile.minAlt / step) * step;
+  const niceMax = Math.ceil(profile.maxAlt / step) * step;
+  const range = (niceMax - niceMin) || step;
+
+  elevationGeometry = { padLeft, padRight, padTop, padBottom, width, height, plotW, plotH, niceMin, range, totalDistance };
+
+  const x = (d) => padLeft + (d / totalDistance) * plotW;
+  const y = (ele) => padTop + plotH - ((ele - niceMin) / range) * plotH;
+
+  const linePoints = profile.points.map((p) => `${x(p.distance).toFixed(1)},${y(p.ele).toFixed(1)}`).join(' ');
+  const baseY = (padTop + plotH).toFixed(1);
+  const areaPoints = `${padLeft},${baseY} ${linePoints} ${(padLeft + plotW).toFixed(1)},${baseY}`;
+
+  const ticks = [];
+  for (let v = niceMin; v <= niceMax + step * 0.001; v += step) {
+    ticks.push(v);
+  }
+
+  const gridMarkup = ticks.map((tick) => {
+    const ty = y(tick).toFixed(1);
+    return `<line class="elevation-grid" x1="${padLeft}" y1="${ty}" x2="${padLeft + plotW}" y2="${ty}"></line><text class="elevation-tick" x="${padLeft - 8}" y="${ty}" text-anchor="end" dominant-baseline="middle">${Math.round(tick)}</text>`;
+  }).join('');
+
+  elevationSummaryEl.textContent = `↑ ${Math.round(profile.gain)} m  ↓ ${Math.round(profile.loss)} m  ·  min ${Math.round(profile.minAlt)} m  ·  max ${Math.round(profile.maxAlt)} m`;
+
+  elevationChartEl.innerHTML = `<svg viewBox="0 0 ${width} ${height}" class="elevation-svg" role="img" aria-label="Andamento altimetrico del percorso">
+    ${gridMarkup}
+    <polygon class="elevation-area" points="${areaPoints}"></polygon>
+    <polyline class="elevation-line" points="${linePoints}"></polyline>
+    <text class="elevation-axis-label" x="${padLeft}" y="${height - 6}" text-anchor="start">0 km</text>
+    <text class="elevation-axis-label" x="${padLeft + plotW}" y="${height - 6}" text-anchor="end">${(totalDistance / 1000).toFixed(1)} km</text>
+    <g class="elevation-cursor" hidden>
+      <line class="elevation-cursor-line" x1="0" y1="${padTop}" x2="0" y2="${padTop + plotH}"></line>
+      <circle class="elevation-cursor-dot" r="4" cx="0" cy="0"></circle>
+    </g>
+    <rect class="elevation-hit" x="${padLeft}" y="${padTop}" width="${plotW}" height="${plotH}" fill="transparent"></rect>
+  </svg>
+  <div class="elevation-tooltip" hidden></div>`;
+
+  attachElevationInteraction();
+}
+
+function attachElevationInteraction() {
+  const svg = elevationChartEl.querySelector('.elevation-svg');
+  const cursorGroup = elevationChartEl.querySelector('.elevation-cursor');
+  const cursorLine = elevationChartEl.querySelector('.elevation-cursor-line');
+  const cursorDot = elevationChartEl.querySelector('.elevation-cursor-dot');
+  const tooltip = elevationChartEl.querySelector('.elevation-tooltip');
+  const hitRect = elevationChartEl.querySelector('.elevation-hit');
+  if (!svg || !hitRect || !elevationGeometry || !elevationPointsCache.length) return;
+
+  const geo = elevationGeometry;
+
+  function nearestPoint(clientX) {
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = 0;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    const svgPoint = pt.matrixTransform(ctm.inverse());
+    const ratio = Math.min(1, Math.max(0, (svgPoint.x - geo.padLeft) / geo.plotW));
+    const targetDistance = ratio * geo.totalDistance;
+    let nearest = elevationPointsCache[0];
+    elevationPointsCache.forEach((p) => {
+      if (Math.abs(p.distance - targetDistance) < Math.abs(nearest.distance - targetDistance)) nearest = p;
+    });
+    return nearest;
+  }
+
+  function showAt(clientX) {
+    const nearest = nearestPoint(clientX);
+    if (!nearest) return;
+    const px = geo.padLeft + (nearest.distance / geo.totalDistance) * geo.plotW;
+    const py = geo.padTop + geo.plotH - ((nearest.ele - geo.niceMin) / geo.range) * geo.plotH;
+    cursorLine.setAttribute('x1', px);
+    cursorLine.setAttribute('x2', px);
+    cursorDot.setAttribute('cx', px);
+    cursorDot.setAttribute('cy', py);
+    cursorGroup.removeAttribute('hidden');
+    tooltip.hidden = false;
+    tooltip.textContent = `${Math.round(nearest.ele)} m · ${(nearest.distance / 1000).toFixed(2)} km`;
+    const rect = elevationChartEl.getBoundingClientRect();
+    const left = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    tooltip.style.left = `${left}px`;
+  }
+
+  function hide() {
+    cursorGroup.setAttribute('hidden', '');
+    tooltip.hidden = true;
+  }
+
+  hitRect.addEventListener('pointermove', (event) => showAt(event.clientX));
+  hitRect.addEventListener('pointerdown', (event) => showAt(event.clientX));
+  hitRect.addEventListener('pointerleave', hide);
 }
 
 function showRoute(route, destination) {
@@ -391,17 +557,6 @@ function showRoute(route, destination) {
   if (lastPosition) bounds.extend([lastPosition.lat, lastPosition.lng]);
   map.fitBounds(bounds, { padding: [20, 20] });
 
-  const steps = (route.legs && route.legs[0] && route.legs[0].steps) ? route.legs[0].steps : [];
-  const instructions = steps.slice(0, 12).map((step) => {
-    const instr = step.maneuver && step.maneuver.instruction;
-    if (instr) return `• ${instr}`;
-    const type = step.maneuver && step.maneuver.type ? step.maneuver.type : '';
-    const mod = step.maneuver && step.maneuver.modifier ? step.maneuver.modifier : '';
-    const name = step.name || '';
-    const text = [type, mod, name].filter(Boolean).join(' ');
-    return `• ${text || 'Continua'}`;
-  });
-  navigationInstructions.innerHTML = instructions.map((text) => `<p>${text}</p>`).join('');
   routeInfo.textContent = `Percorso: ${(route.distance / 1000).toFixed(2)} km • ${(route.duration / 60).toFixed(0)} min`;
 }
 
@@ -457,13 +612,14 @@ async function startNavigation() {
   try {
     const route = await requestRoute(current, routeData.location);
     showRoute(route, routeData.location);
-    const elevation = await elevationProfile(route.geometry.coordinates);
-    if (elevation) {
-      routeAltitudeSummary = `min ${Math.round(elevation.minAlt)} m • max ${Math.round(elevation.maxAlt)} m • ↑${Math.round(elevation.gain)}m`;
+    elevationSummaryEl.textContent = 'Calcolo profilo altimetrico...';
+    const profile = await elevationProfile(route.geometry.coordinates);
+    if (profile) {
+      renderElevationChart(profile);
     } else {
-      routeAltitudeSummary = 'Altitudine prevista non disponibile';
+      elevationSummaryEl.textContent = 'Profilo altimetrico non disponibile';
+      elevationChartEl.innerHTML = '<p class="elevation-empty">Impossibile calcolare l\'altimetria per questo percorso.</p>';
     }
-    updateStats();
   } catch (err) {
     routeInfo.textContent = `Errore nel calcolo del percorso: ${err.message}`;
   } finally {
@@ -482,25 +638,20 @@ function clearDestinationRoute() {
   }
   routeData = null;
   routeInfo.textContent = 'Nessuna destinazione impostata.';
-  navigationInstructions.innerHTML = '';
   navigateButton.disabled = true;
   clearDestination.disabled = true;
-  routeAltitudeSummary = null;
+  clearElevationChart();
   updateStats();
 }
 
 function updateThemeButton() {
-  if (document.body.classList.contains('dark-theme')) {
-    themeToggle.textContent = '🌙';
-    themeToggle.setAttribute('aria-label', 'Tema scuro attivo');
-  } else {
-    themeToggle.textContent = '☀️';
-    themeToggle.setAttribute('aria-label', 'Tema chiaro attivo');
-  }
+  const isLight = document.body.classList.contains('light-theme');
+  themeToggle.textContent = isLight ? '🌙' : '☀️';
+  themeToggle.setAttribute('aria-label', isLight ? 'Attiva tema scuro' : 'Attiva tema chiaro');
 }
 
 function toggleTheme() {
-  document.body.classList.toggle('dark-theme');
+  document.body.classList.toggle('light-theme');
   updateThemeButton();
 }
 

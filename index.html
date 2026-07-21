@@ -60,11 +60,6 @@
             <strong id="currentAltitude">—</strong>
             <p>Quota attuale</p>
           </article>
-          <article class="stat-card">
-            <span>Altitudine percorso</span>
-            <strong id="routeAltitude">—</strong>
-            <p>Quota stimata</p>
-          </article>
         </div>
 
         <div class="fab-row">
@@ -109,9 +104,14 @@
           </div>
         </div>
 
-        <div class="instructions-panel card-panel">
-          <h3>Istruzioni di navigazione</h3>
-          <div id="navigationInstructions" class="instructions">Qui appariranno le indicazioni di percorso.</div>
+        <div class="elevation-panel card-panel" id="elevationPanel">
+          <div class="panel-header">
+            <h3>Andamento altimetrico</h3>
+            <span id="elevationSummary">Seleziona una destinazione e avvia la navigazione</span>
+          </div>
+          <div class="elevation-chart" id="elevationChart">
+            <p class="elevation-empty">Il profilo altimetrico del percorso apparirà qui.</p>
+          </div>
         </div>
       </section>
     </main>
